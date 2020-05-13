@@ -14,6 +14,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include "timer.h"
+#include "adc.h"
 
 // IOs
 #define OCR1_PORT	PORTD

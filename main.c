@@ -9,26 +9,25 @@
 
 
 
-volatile timer1_regs_t			*timer1_regs			= (volatile timer1_regs_t *)			TIMER1_CONT_REG_OFFSET;
-volatile timer_interrupt_reg_t	*timer_interrupt_reg	= (volatile timer_interrupt_reg_t *)	TIMER_INTERRUPT_REG_OFFSET;
+volatile uint16_t adc_val;
 
+volatile uint16_t ovf_cnt;
+
+extern volatile timer1_regs_t			*timer1_regs;
+extern volatile timer0_regs_t			*timer0_regs;
+extern volatile timer_interrupt_reg_t	*timer_interrupt_reg;
+
+extern volatile adc_regs_t	*adc_regs;
+
+void btn_init();
 
 int main(void)
-{
-	DDRD |= (1 << LED);
-	DDRD |= (1 << PUMP);
-	
-	timer1_regs->waveform_gen_mode1			= WGM1_FAST_PWM_ICR_TOP;
-	timer1_regs->waveform_gen_mode2			= WGM2_FAST_PWM_ICR_TOP;
-	timer1_regs->COM1A						= COM1_CLEAR_ON_MATCH;
-	timer1_regs->COM1B						= COM1_CLEAR_ON_MATCH;
-	timer1_regs->clock_sel					= CS1_FCPU_DIV_64;
-	timer1_regs->input_capture_reg			= MAX_ADC_RES;
-	timer1_regs->output_capture_reg_b		= (MAX_ADC_RES >> 1);
-	timer1_regs->output_capture_reg_a		= (MAX_ADC_RES >> 1);
-	
-	timer_interrupt_reg->timer1_output_comp_match_b_int = 1;
+{	
+	timer1_fast_pwm_init();
+	adc_init();
+	timer0_init();
 	sei();
+	adc_regs->start_conversion	= 1;
 	
 
     while (1) {
@@ -36,3 +35,29 @@ int main(void)
     }
 }
 
+
+ISR(ADC_vect){
+	
+	adc_val = adc_regs->result;
+	adc_regs->start_conversion	= 1;
+	
+}
+
+ISR(TIMER1_COMPB_vect) {
+	
+	timer1_regs->output_capture_reg_a = adc_val;
+	timer1_regs->output_capture_reg_b = adc_val;
+	
+	//timer1_regs->output_capture_reg_a = 1023;
+	//timer1_regs->output_capture_reg_b = 1023;
+	
+	
+}
+
+ISR(TIMER0_OVF_vect) {
+	ovf_cnt++;
+}
+
+void btn_init(){
+	BTN_PORT &= ~((1 << BTN1) | (1 << BTN2));
+};

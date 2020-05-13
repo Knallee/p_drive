@@ -9,35 +9,52 @@
 #ifndef TIMER_H_
 #define TIMER_H_
 
-#include <avr/io.h>
+#include "p_drive.h"
 
 #define TIMER_INTERRUPT_REG_OFFSET	0x6E
-
 #define TIMER1_CONT_REG_OFFSET		0x80
+#define TIMER0_CONT_REG_OFFSET		0x44
+
+#define TIMER1_NORMAL_OPERATION				0
+#define TIMER1_WGM1_FAST_PWM_ICR_TOP		2
+#define TIMER1_WGM2_FAST_PWM_ICR_TOP		3
+
+#define TIMER1_WGM1_FAST_PWM_OCR_TOP		3
+#define TIMER1_WGM2_FAST_PWM_OCR_TOP		3
+
+#define TIMER1_COM1_NORMAL_OP				0
+#define TIMER1_COM1_TOGGLE_ON_MATCH			1
+#define TIMER1_COM1_CLEAR_ON_MATCH			2
+#define TIMER1_COM1_SET_ON_MATCH			3
 
 
-#define NORMAL_OPERATION			0
-#define WGM1_FAST_PWM_ICR_TOP		2
-#define WGM2_FAST_PWM_ICR_TOP		3
-
-#define WGM1_FAST_PWM_OCR_TOP		3
-#define WGM2_FAST_PWM_OCR_TOP		3
-
-#define COM1_NORMAL_OP				0
-#define COM1_TOGGLE_ON_MATCH		1
-#define COM1_CLEAR_ON_MATCH			2
-#define COM1_SET_ON_MATCH			3
+#define TIMER1_CS1_NO_CLOCK					0
+#define TIMER1_CS1_FCPU_DIV_1				1
+#define TIMER1_CS1_FCPU_DIV_8				2
+#define TIMER1_CS1_FCPU_DIV_64				3
+#define TIMER1_CS1_FCPU_DIV_256				4
+#define TIMER1_CS1_FCPU_DIV_1024			5
+#define TIMER1_CS1_EXTERNAL_FALLING			6
+#define TIMER1_CS1_EXTERNAL_RISING			7
 
 
-#define CS1_NO_CLOCK				0
-#define CS1_FCPU_DIV_1				1
-#define CS1_FCPU_DIV_8				2
-#define CS1_FCPU_DIV_64				3
-#define CS1_FCPU_DIV_256			4
-#define CS1_FCPU_DIV_1024			5
-#define CS1_EXTERNAL_FALLING		6
-#define CS1_EXTERNAL_RISING			7
+#define TIMER0_NORMAL_OPERATION				0
+#define TIMER0_WGM1_FAST_PWM_ICR_TOP		2
+#define TIMER0_WGM2_FAST_PWM_ICR_TOP		1
 
+#define TIMER0_COM0_NORMAL_OP				0
+#define TIMER0_COM0_TOGGLE_ON_MATCH			1
+#define TIMER0_COM0_CLEAR_ON_MATCH			2
+#define TIMER0_COM0_SET_ON_MATCH			3
+
+#define TIMER0_CS0_NO_CLOCK					0
+#define TIMER0_CS0_FCPU_DIV_1				1
+#define TIMER0_CS0_FCPU_DIV_8				2
+#define TIMER0_CS0_FCPU_DIV_64				3
+#define TIMER0_CS0_FCPU_DIV_256				4
+#define TIMER0_CS0_FCPU_DIV_1024			5
+#define TIMER0_CS0_EXTERNAL_FALLING			6
+#define TIMER0_CS0_EXTERNAL_RISING			7
 
 
 typedef struct {
@@ -105,6 +122,36 @@ typedef struct {
 	
 } timer_interrupt_reg_t;
 
+typedef struct {
+	// TCCR0A – Timer/Counter1 Control Register A
+	uint8_t waveform_gen_mode1		: 2;	/**< Combined with the waveform_gen_mode2 (WGMn3:2) bits in the TCCR1B Register, 
+												 type of waveform generated. Use the macros starting with WGM1_.*/
+	uint8_t reserved1				: 2;	/**< Reserved bits, read only.*/
+	uint8_t COM0B					: 2;	/**< Compare Output Mode for Channel B. Use macro starting with COM1_.*/
+	uint8_t COM0A					: 2;	/**< Compare Output Mode for Channel A. Use macro starting with COM1_*/
+	
+	// TCCR0B – Timer/Counter1 Control Register B
+	uint8_t clock_sel				: 3;	/**< Selects the clock source to be used by the Timer/Counter 1. Use the macro starting with CS1_*/
+	uint8_t waveform_gen_mode2		: 1;	/**< Combined with the waveform_gen_mode1 (WGMn1:0) bits in the TCCR1A Register, 
+												 type of waveform generated.  Use the macros starting with WGM2_.*/
+	uint8_t reserved2				: 2;	/**< Reserved bits, read only.*/
+	uint8_t force_out_cap_compare_b	: 1;	/**< When writing a logical one to the FOCnA/FOCnB bit, an immediate 
+												 compare match is forced on the Waveform Generation unit. Must be 
+												 set to zero when TCCRnA is written when operating in a PWM mode*/
+	uint8_t force_out_cap_compare_a	: 1;	/**< See force_out_cap_compare_b.*/
+	
+	// TCNT0 - Timer/Counter0
+	uint8_t count_reg				: 8;	/**< Counter register of timer/counter 1. */
+	
+	// OCR0A and OCR0B – Output Compare Register 0 A and B
+	uint8_t output_capture_reg_a	: 8;	/**< The output compare register for channel A of timer/counter 0. */
+	uint8_t output_capture_reg_b	: 8;	/**< The output compare register for channel B of timer/counter 0. */
+	
+	
+} timer0_regs_t;
 
+
+void timer1_fast_pwm_init();
+void timer0_init();
 
 #endif /* TIMER_H_ */
